@@ -47,9 +47,8 @@ def cli(debug, logfile):
               help="Tag Population value (default 4)")
 @click.option('-r', '--reconnect', is_flag=True, default=False,
               help='reconnect on connection failure or loss')
-@click.option('--tag-filter-mask', type=str, default=[], multiple=True,
-              help=('Filter inventory on EPC (or prefix of EPC); multiple'
-                    ' args allowed'))
+@click.option('--tag-filter-mask', type=str, default=None, 
+              help=('Filter inventory on EPC ID (or part of ID)'))
 @click.option('--impinj-extended-configuration', is_flag=True, default=False,
               help=('Get Impinj extended configuration values'))
 @click.option('--impinj-search-mode', type=click.Choice(['1', '2']),
@@ -74,7 +73,7 @@ def inventory(host, port, time, report_every_n_tags, antennas, tx_power,
                                'reconnect', 'tag_filter_mask',
                                'impinj_extended_configuration',
                                'impinj_search_mode',
-                               'impinj_reports',
+                               'impinj_reports', 
                                'impinj_fixed_freq'])
     args = Args(host=host, port=port, time=time, every_n=report_every_n_tags,
                 antennas=antennas, tx_power=tx_power,
@@ -128,19 +127,21 @@ def log(host, outfile, antennas, epc, reader_timestamp):
               help='Word addresss of the first word to read/write')
 @click.option('-ap', '--access-password', type=int, default=0,
               help='Access password for secure state if R/W locked')
+@click.option('--tag-filter-mask', type=str, default=None, 
+              help=('Filter inventory on EPC ID (or part of ID)'))
 def access(host, port, time, report_every_n_tags, tx_power, tari,
            session, tag_population, read_words, write_words, count,
-           memory_bank, word_ptr, access_password):
+           memory_bank, word_ptr, access_password, tag_filter_mask):
     Args = namedtuple('Args', ['host', 'port', 'time', 'every_n',
                                'tx_power', 'tari', 'session',
                                'population', 'read_words', 'write_words',
-                               'count', 'mb', 'word_ptr', 'access_password'])
+                               'count', 'mb', 'word_ptr', 'access_password','tag_filter_mask'])
     args = Args(host=host, port=port, time=time, every_n=report_every_n_tags,
                 tx_power=tx_power, tari=tari,
                 session=session, population=tag_population,
                 read_words=read_words, write_words=write_words, count=count,
                 mb=memory_bank, word_ptr=word_ptr,
-                access_password=access_password)
+                access_password=access_password, tag_filter_mask=tag_filter_mask)
     logger.debug('access args: %s', args)
     _access.main(args)
 
