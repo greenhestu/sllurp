@@ -3,11 +3,13 @@ import binascii
 import logging
 import pprint
 import sys
+import time ###
 from twisted.internet import reactor, defer
-
 from sllurp.util import monotonic
 import sllurp.llrp as llrp
+from multiprocessing import Queue
 
+queue = None
 startTime = None
 
 tagReport = 0
@@ -68,7 +70,7 @@ def politeShutdown(factory):
 
 def tagReportCallback(llrpMsg):
     """Function to run each time the reader reports seeing tags."""
-    global tagReport
+    global tagReport, q
     tags = llrpMsg.msgdict['RO_ACCESS_REPORT']['TagReportData']
     if len(tags):
         logger.info('saw tag(s): %s', pprint.pformat(tags))
@@ -84,13 +86,25 @@ def tagReportCallback(llrpMsg):
                 if sys.version_info.major < 3:
                     sys.stdout.write(data)
                 else:
-                    sys.stdout.buffer.write(data)                     # bytes
+                    sys.stdout.buffer.write(data)  # bytes
+                    '''
+                    readData = open("/home/smile/Desktop/readData.txt", 'w')
+                    #readData.write(str(tag["EPCData"]["EPC"]).split("'")[1]+' '+str(data.hex())+'\n')
+                    readData.write(data.hex())
+                    readData.close()
+                    '''
+                    if queue!=None:
+                        queue.put(str(tag["EPCData"]["EPC"]).split("'")[1]+data.hex())
+
                 logger.debug("hex data: %s", binascii.hexlify(data))
 
 
-def main(main_args):
+def main(main_args, q=None):
     global startTime
     global args
+    global queue
+    if q!=None:
+        queue = q
     args = main_args
 
     # will be called when all connections have terminated normally
@@ -105,6 +119,7 @@ def main(main_args):
                                  start_inventory=True,
                                  tx_power=args.tx_power,
                                  report_every_n_tags=args.every_n,
+                                 tag_filter_mask=args.tag_filter_mask,
                                  tag_content_selector={
                                      'EnableROSpecID': False,
                                      'EnableSpecIndex': False,
